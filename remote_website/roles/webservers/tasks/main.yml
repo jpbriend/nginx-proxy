@@ -1,0 +1,27 @@
+---
+# This task installs and enables apache on webservers
+- name: ensure apache is installed
+  apt: pkg=apache2 state=latest
+- name: copy Site files to document root
+  copy: src=files/ dest=/var/www/html/files
+- name: copy index.html
+  copy: src=index.html dest=/var/www/html/index.html
+- name: enable Apache SSL module
+  command: sudo a2enmod ssl
+- name: Create Apache SSL directory
+  file: name=/etc/apache2/ssl state=directory owner=root
+- name: copy .key certificates
+  copy: src=ssl/cert.key dest=/etc/apache2/ssl/cert.key owner=root
+- name: limit permissions on our key
+  command: sudo chmod o-rw /etc/apache2/ssl/cert.key
+- name: copy .pem certificates
+  copy: src=ssl/cert.pem dest=/etc/apache2/ssl/cert.pem owner=root
+- name: create SSL conf in Apache
+  command: sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/ssl.conf
+- name: add SSL port to Apache configuration
+  command: sudo sed -i '1,2s/\*:80/*:443/' /etc/apache2/sites-available/ssl.conf
+- name: add SSL directives to Apache configuration
+  command: sudo sed -i "3a\\\tSSLEngine On\n\tSSLCertificateFile /etc/apache2/ssl/cert.pem\n\SSLCertificateKeyFile /etc/apache2/ssl/cert.key" /etc/apache2/sites-available/ssl.conf
+- name: enable Apache SSL site
+  command: sudo a2ensite ssl
+  notify: restart apache

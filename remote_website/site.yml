@@ -1,0 +1,7 @@
+---
+- name: install and configure webservers
+  hosts: webservers
+  remote_user: ec2-user
+  sudo: yes
+  roles:
+   - webservers
